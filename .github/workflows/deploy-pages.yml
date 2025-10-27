@@ -14,6 +14,8 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      GH_PAGES_PAT: ${{ secrets.GH_PAGES_PAT }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -51,14 +53,14 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Deploy to gh-pages using PAT (if provided)
-        if: ${{ secrets.GH_PAGES_PAT }}
+        if: env.GH_PAGES_PAT != ''
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GH_PAGES_PAT }}
           publish_dir: ./dist
 
       - name: Deploy to gh-pages using GITHUB_TOKEN (may be blocked by branch protection)
-        if: ${{ !secrets.GH_PAGES_PAT }}
+        if: env.GH_PAGES_PAT == ''
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
