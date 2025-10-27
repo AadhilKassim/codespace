@@ -27,9 +27,9 @@ import "./styles.css";
 // e.g. REACT_APP_GITHUB and REACT_APP_LINKEDIN. They will fall back to
 // the placeholder values below if not provided.
 const siteProps = {
-  name: "Alexandrie Grenier",
-  title: "Web Designer & Content Creator",
-  email: "alex@example.com",
+  name: "Aadhil Kassim P N",
+  title: "Full Stack Developer & C/C++ Developer",
+  email: "aadhilkassim@tistcochin.edu.in",
   // Provided GitHub username — used by Portfolio to fetch your repos
   gitHub: process.env.REACT_APP_GITHUB || "AadhilKassim",
   instagram: "",
