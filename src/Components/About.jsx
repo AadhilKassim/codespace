@@ -5,6 +5,7 @@
  */
 
 import React from "react";
+import PropTypes from "prop-types";
 
 /**
  * About background image
@@ -23,6 +24,7 @@ const imageAltText = "purple and blue abstract background";
 /**
  * Sort description that expands on your title on the Home component.
  */
+// Default description — will be overridden by bio prop when available
 const description =
   "I'm a UI/UX student studying at Barnett Technical University. I enjoy creating unique and simplistic user interfaces in creative ways.";
 
@@ -47,7 +49,9 @@ const skillsList = [
 const detailOrQuote =
   "I am passionate about solving problems in new creative ways to drive innovation. By leveraging my UI/UX experience I continually look for new and better ways to make tech accessible by all.";
 
-const About = () => {
+const About = ({ avatar, bio }) => {
+  const displayBio = bio || description;
+
   return (
     <section className="padding" id="about">
       <img className="background" src={image} alt={imageAltText} />
@@ -60,8 +64,15 @@ const About = () => {
           textAlign: "center",
         }}
       >
+        {avatar && (
+          <img
+            src={avatar}
+            alt="profile"
+            style={{ width: 120, height: 120, borderRadius: "50%", objectFit: "cover", marginBottom: '1rem' }}
+          />
+        )}
         <h2>About Myself</h2>
-        <p className="large">{description}</p>
+        <p className="large">{displayBio}</p>
         <hr />
         <ul
           style={{
@@ -81,6 +92,11 @@ const About = () => {
       </div>
     </section>
   );
+};
+
+About.propTypes = {
+  avatar: PropTypes.string,
+  bio: PropTypes.string,
 };
 
 export default About;

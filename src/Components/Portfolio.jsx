@@ -8,7 +8,7 @@
  * as you continue to learn and create.
  */
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 /**
  * Desk image
@@ -29,6 +29,7 @@ const imageAltText = "desktop with books and laptop";
  * An array of objects that will be used to display for your project
  * links section. Below is a sample, update to reflect links you'd like to highlight.
  */
+// sample fallback projects (used if GitHub fetch fails or no username provided)
 const projectList = [
   {
     title: "10 Things To Know About Azure Static Web Apps 🎉",
@@ -56,7 +57,46 @@ const projectList = [
   },
 ];
 
-const Portfolio = () => {
+const Portfolio = ({ gitHub }) => {
+  const [repos, setRepos] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchRepos = async () => {
+      if (!gitHub) return;
+      setLoading(true);
+      try {
+        // Grab up to 100 repos and pick the top by stars as a proxy for pinned
+        const res = await fetch(`https://api.github.com/users/${gitHub}/repos?per_page=100`);
+        if (!res.ok) throw new Error("GitHub API error");
+        const data = await res.json();
+        const top = data
+          .filter((r) => !r.fork)
+          .sort((a, b) => b.stargazers_count - a.stargazers_count)
+          .slice(0, 6)
+          .map((r) => ({
+            title: r.name,
+            description: r.description || "",
+            url: r.html_url,
+          }));
+        if (mounted) setRepos(top);
+      } catch (e) {
+        // leave repos empty to fall back to projectList
+        // eslint-disable-next-line no-console
+        console.error("Failed to fetch GitHub repos", e);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    fetchRepos();
+    return () => {
+      mounted = false;
+    };
+  }, [gitHub]);
+
+  const displayList = repos && repos.length ? repos : projectList;
+
   return (
     <section className="padding" id="portfolio">
       <h2 style={{ textAlign: "center" }}>Portfolio</h2>
@@ -69,7 +109,8 @@ const Portfolio = () => {
           />
         </div>
         <div className="container">
-          {projectList.map((project) => (
+          {loading && <p className="small">Loading repositories...</p>}
+          {displayList.map((project) => (
             <div className="box" key={project.title}>
               <a href={project.url} target="_blank" rel="noopener noreferrer">
                 <h3 style={{ flexBasis: "40px" }}>{project.title}</h3>
