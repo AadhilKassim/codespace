@@ -47,33 +47,19 @@ jobs:
         run: |
           npm run build -- --public-url "https://${OWNER}.github.io/${REPO}"
 
-      - name: Upload artifact for GitHub Pages
-        uses: actions/upload-pages-artifact@v1
-        with:
-          path: ./dist
-
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v1
-      
-      # Fallback deployment using push to gh-pages branch via peaceiris.
-      # This step will run only if the Pages actions route is not desired or fails.
+      # Deploy by pushing built `dist` to the gh-pages branch using peaceiris.
+      # Prefer a PAT stored as GH_PAGES_PAT (recommended if you have branch protection),
+      # otherwise fall back to the default GITHUB_TOKEN (may be blocked by branch protection).
       - name: Setup git user
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Deploy to gh-pages using PAT (if provided)
-        if: env.GH_PAGES_PAT != ''
+      - name: Deploy to gh-pages (peaceiris)
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GH_PAGES_PAT }}
-          publish_dir: ./dist
-
-      - name: Deploy to gh-pages using GITHUB_TOKEN (may be blocked by branch protection)
-        if: env.GH_PAGES_PAT == ''
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Use PAT if provided, otherwise fall back to GITHUB_TOKEN
+          github_token: ${{ secrets.GH_PAGES_PAT || secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
 
   diagnostics:
