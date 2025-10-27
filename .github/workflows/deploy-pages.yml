@@ -27,6 +27,16 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install dependencies
         run: npm ci || npm install
 
@@ -65,3 +75,44 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
+
+  diagnostics:
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: List referenced actions from workflows
+        run: |
+          echo "Searching .github/workflows for 'uses:' entries"
+          mkdir -p /tmp/actions-list
+          grep -hR "uses:" .github/workflows || true
+          grep -hR "uses:" .github/workflows | sed -E 's/.*uses: *([^ ]+).*/\1/' | sort -u > /tmp/actions-list/actions.txt || true
+          echo "Found actions:"
+          cat /tmp/actions-list/actions.txt || true
+
+      - name: Check remote action metadata for deprecated upload-artifact@v3
+        run: |
+          set -euo pipefail
+          while read -r action; do
+            [ -z "$action" ] && continue
+            echo "\n--- Checking $action ---"
+            repo="${action%@*}"
+            ref="${action#*@}"
+            # Try common metadata filenames
+            for meta in action.yml action.yaml; do
+              url="https://raw.githubusercontent.com/${repo}/${ref}/${meta}"
+              echo "Trying $url"
+              if curl -sSf "$url" -o /tmp/remote-action.yml; then
+                if grep -q "actions/upload-artifact@v3" /tmp/remote-action.yml; then
+                  echo "DEPRECATED: Found actions/upload-artifact@v3 in $url"
+                else
+                  echo "OK: no direct reference to upload-artifact@v3 in $url"
+                fi
+              else
+                echo "Could not fetch $url (may not exist)"
+              fi
+            done
+          done < /tmp/actions-list/actions.txt || true
