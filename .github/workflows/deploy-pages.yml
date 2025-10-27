@@ -34,10 +34,10 @@ jobs:
           # Build and set the correct public URL for a project site:
           npm run build -- --public-url "https://${OWNER}.github.io/${REPO}"
 
-      - name: Upload artifact for GitHub Pages
-        uses: actions/upload-pages-artifact@v1
+      - name: Deploy to gh-pages branch (peaceiris)
+        # Use a deploy action that pushes the built `dist` folder to the gh-pages branch.
+        # This avoids relying on the deprecated upload-artifact behaviour in other actions.
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          path: ./dist
-
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v1
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
